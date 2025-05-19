@@ -70,3 +70,37 @@ class VAE_ResidualBlock(nn.Module):
         x = self.conv_block_2(x)
 
         return x + self.residual_layer(residue)
+
+
+# TODO: Add dimension comments to indicate change in input dimensions -> output dimension
+class VariationalAutoDecoder(nn.Sequential):
+    def __init__(self) -> None:
+        super().__init__(
+            nn.Conv2d(4, 4, kernel_size=1, padding=0),
+            nn.Conv2d(4, 512, kernel_size=3, padding=1),
+            VAE_ResidualBlock(512, 512),
+            VAE_AttentionBlock(512),
+            VAE_ResidualBlock(512, 512),
+            VAE_ResidualBlock(512, 512),
+            VAE_ResidualBlock(512, 512),
+            VAE_ResidualBlock(512, 512),
+            nn.Upsample(scale_factor=2),
+            nn.Conv2d(512, 512, kernel_size=3, padding=1),
+            VAE_ResidualBlock(512, 256),
+            VAE_ResidualBlock(256, 256),
+            VAE_ResidualBlock(256, 256),
+            nn.Upsample(scale_factor=2),
+            nn.Conv2d(256, 256, kernel_size=3, padding=1),
+            VAE_ResidualBlock(256, 128),
+            VAE_ResidualBlock(128, 128),
+            VAE_ResidualBlock(128, 128),
+            nn.GroupNorm(num_groups=32, num_channels=128),
+            nn.SiLU(),
+            nn.Conv2d(128, 3, kernel_size=3, padding=1),
+        )
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:  # type: ignore
+        x /= 0.18215  # nullify the *magic* constant
+        for module in self:
+            x = module(x)
+        return x
