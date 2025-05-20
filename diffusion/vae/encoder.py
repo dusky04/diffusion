@@ -4,6 +4,7 @@ from torch.nn import functional as F
 from decoder import VAE_AttentionBlock, VAE_ResidualBlock
 
 
+# TODO: Learn about VAEs
 # TODO: Add input channels and output channels
 class VariationalAutoEncoder(nn.Sequential):
     def __init__(self):
